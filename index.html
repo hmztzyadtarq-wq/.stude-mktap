@@ -43,6 +43,7 @@
             background: #0f172a;
             border: 1px solid var(--border-color);
             margin-bottom: 10px;
+            color: #fff;
         }
         
         /* ستايل لوحة المقارنة التنافسية */
@@ -101,6 +102,35 @@
             width: 0%;
             transition: width 0.5s ease;
         }
+
+        /* ستايل كارت الجوجل ميت المطور */
+        .meet-box {
+            background: var(--luxury-gradient);
+            border-radius: 12px;
+            padding: 20px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+        .meet-btn {
+            background-color: #020617;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        .meet-btn:hover {
+            transform: scale(1.03);
+            background-color: #0f172a;
+        }
+
         .theme-toggle-btn {
             background-color: var(--accent-pink);
             color: white;
@@ -109,6 +139,28 @@
             border-radius: 20px;
             cursor: pointer;
             font-weight: bold;
+        }
+
+        /* ستايل قسم التوقيت والعدادات الإضافية المرجعة */
+        .dashboard-widgets {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .widget-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .widget-val {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--accent-pink);
+            margin-top: 5px;
+            font-family: 'Courier New', Courier, monospace;
         }
     </style>
 </head>
@@ -128,6 +180,18 @@
     
     <main style="padding: 20px; max-width: 1200px; margin: 0 auto;">
         
+        <!-- قسم العدادات المرجعة: الساعة والعد التنازلي للامتحانات -->
+        <div class="dashboard-widgets">
+            <div class="widget-box">
+                <div style="font-size: 14px; color: var(--text-muted);">⏰ الساعة الآن</div>
+                <div class="widget-val" id="digitalClock">00:00:00 م</div>
+            </div>
+            <div class="widget-box">
+                <div style="font-size: 14px; color: var(--text-muted);">⏳ العد التنازلي المتبقي</div>
+                <div class="widget-val" id="countdownWidget">جاري الحساب...</div>
+            </div>
+        </div>
+
         <!-- قسم المقارنة والـ VS الشرسة بينك وبين حازم -->
         <section class="card">
             <h2>📊 ساحة المواجهة والـ Scoreboard (إجمالي جميع المعسكرات)</h2>
@@ -159,8 +223,23 @@
             </div>
             
             <!-- رسالة تحفيزية ديناميكية -->
-            <div id="leaderMessage" style="text-align: center; margin-top: 15px; font-weight: bold; font-size: 16px; color: #e2e8f0;">
+            <div id="leaderMessage" style="text-align: center; margin-top: 15px; font-weight: bold; font-size: 16px; color: var(--text-main);">
                 جاري حساب صدارة التحدي الحالية... 🤔
+            </div>
+        </section>
+
+        <!-- 🎥 قسم الغرفة والاجتماع المباشر (Google Meet) -->
+        <section class="card" style="margin-top: 20px;">
+            <h2>🎥 قاعة المذاكرة والاتصال المباشر</h2>
+            <div class="meet-box">
+                <div>
+                    <h3 style="margin-bottom: 5px; color: white;">💻 انضم الآن لغرفة المذاكرة المفتوحة مع حازم</h3>
+                    <p style="font-size: 13px; opacity: 0.9; color: white;">افتح الكاميرا أو الشاشة وابدأ التركيز والحل المشترك فوراً.</p>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <input type="text" id="meetUrlInput" placeholder="ضع رابط Google Meet هنا..." style="width: 250px; background: rgba(250,250,250,0.2); color: white; border: 1px solid rgba(250,250,250,0.4); padding: 8px;">
+                    <a href="#" id="meetLinkBtn" target="_blank" class="meet-btn">دخول الاجتماع الآن ➔</a>
+                </div>
             </div>
         </section>
 
@@ -177,7 +256,7 @@
     </main>
 
     <script>
-        // استدعاء نفس مصفوفة البيانات المشتركة من الـ LocalStorage
+        // استدعاء مصفوفة البيانات المشتركة من الـ LocalStorage
         let globalCamps = JSON.parse(localStorage.getItem('globalCamps')) || [
             {
                 id: "default_10_days",
@@ -190,23 +269,24 @@
             applySavedTheme();
             renderCampsGrid();
             calculateVsStatistics();
+            setupGoogleMeetLink();
+            startLiveClock();
+            updateExamCountdown();
         };
 
-        // 1. دالة بناء كروت المعسكرات ديناميكياً والربط الذكي
+        // 1. دالة بناء كروت المعسكرات ديناميكياً والربط الذكي للتنقل للجدول
         function renderCampsGrid() {
             const container = document.getElementById('campsGridContainer');
             container.innerHTML = '';
 
             globalCamps.forEach(camp => {
                 const totalTasks = camp.tasks.length;
-                
                 const card = document.createElement('div');
                 card.className = 'camp-card';
                 
-                // عند الضغط على الكارت: يتم تعديل الـ activeCampId المحفوظ فوراً ثم التحويل
                 card.onclick = function() {
                     localStorage.setItem('activeCampId', camp.id);
-                    window.location.href = 'schedule.html'; // توجيه لصفحة الجدول
+                    window.location.href = 'schedule.html'; 
                 };
 
                 card.innerHTML = `
@@ -229,7 +309,6 @@
             let meDoneCount = 0;
             let hazemDoneCount = 0;
 
-            // حساب الأرقام من كل المعسكرات المتاحة في قاعدة البيانات المحلية
             globalCamps.forEach(camp => {
                 camp.tasks.forEach(task => {
                     totalTasksCount++;
@@ -238,32 +317,80 @@
                 });
             });
 
-            // تحديث العدادات الرقمية على الشاشة
             document.getElementById('meTotalScore').innerText = meDoneCount;
             document.getElementById('hazemTotalScore').innerText = hazemDoneCount;
 
-            // حساب النسب المئوية لمنع الـ Divide by Zero إذا كانت المهام صفر
             let mePercent = totalTasksCount > 0 ? Math.round((meDoneCount / totalTasksCount) * 100) : 0;
             let hazemPercent = totalTasksCount > 0 ? Math.round((hazemDoneCount / totalTasksCount) * 100) : 0;
 
-            // تحديث نصوص النسب والبارات التفاعلية
             document.getElementById('mePercentageText').innerText = `تم إنجاز ${mePercent}% من المهام`;
             document.getElementById('meBar').style.width = `${mePercent}%`;
 
             document.getElementById('hazemPercentageText').innerText = `تم إنجاز ${hazemPercent}% من المهام`;
             document.getElementById('hazemBar').style.width = `${hazemPercent}%`;
 
-            // تحديث الرسالة التنافسية بناءً على النتيجة الحالية
             const msgElement = document.getElementById('leaderMessage');
             if (totalTasksCount === 0) {
-                msgElement.innerText = "اكتبوا بعض المهام في الجداول لتبدأ شرارة التحدي والمقارنة! 🧑‍راية";
+                msgElement.innerText = "اكتبوا بعض المهام في الجداول لتبدأ شرارة التحدي والمقارنة! 🧑‍💻";
             } else if (meDoneCount > hazemDoneCount) {
-                msgElement.innerHTML = `🥇 الصدارة الحالية <span style="color: var(--accent-pink);">للبشمهندس</span> بفارق ${meDoneCount - hazemDoneCount} مهمة! عاش يا بطل، استمر في الضغط! 🔥💪`;
+                msgElement.innerHTML = `🥇 الصدارة الحالية <span style="color: var(--accent-pink); font-weight: bold;">للبشمهندس</span> بفارق ${meDoneCount - hazemDoneCount} مهمة! عاش يا بطل، استمر في الضغط! 🔥💪`;
             } else if (hazemDoneCount > meDoneCount) {
-                msgElement.innerHTML = `🥇 الصدارة الحالية <span style="color: #10b981;">للدكتور حازم</span> بفارق ${hazemDoneCount - meDoneCount} مهمة! شد حيلك يا بشمهندس وعوض الفرق حالاً! ⚡📚`;
+                msgElement.innerHTML = `🥇 الصدارة الحالية <span style="color: #10b981; font-weight: bold;">للدكتور حازم</span> بفارق ${hazemDoneCount - meDoneCount} مهمة! شد حيلك يا بشمهندس وعوض الفرق حالاً! ⚡📚`;
             } else {
                 msgElement.innerText = "تعادل رهيب ومثالي في المذاكرة حالياً! 🤝 قمة التركيز من الطرفين، من سيكسر التعادل؟ 🔥";
             }
+        }
+
+        // 3. إدارة وحفظ رابط الـ Google Meet تلقائياً
+        function setupGoogleMeetLink() {
+            const input = document.getElementById('meetUrlInput');
+            const btn = document.getElementById('meetLinkBtn');
+            const defaultMeetUrl = "https://meet.google.com/";
+            const savedMeetUrl = localStorage.getItem('customMeetUrl') || defaultMeetUrl;
+            
+            input.value = savedMeetUrl;
+            btn.href = savedMeetUrl;
+
+            input.addEventListener('input', function() {
+                const currentVal = input.value.trim() || defaultMeetUrl;
+                localStorage.setItem('customMeetUrl', currentVal);
+                btn.href = currentVal;
+            });
+        }
+
+        // 4. تشغيل وتحديث الساعة الحية لحظياً
+        function startLiveClock() {
+            setInterval(() => {
+                const now = new Date();
+                let hours = now.getHours();
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                const ampm = hours >= 12 ? 'م' : 'ص';
+                
+                hours = hours % 12;
+                hours = hours ? hours : 12; // الساعة 0 تصبح 12
+                
+                document.getElementById('digitalClock').innerText = `${hours}:${minutes}:${seconds} ${ampm}`;
+            }, 1000);
+        }
+
+        // 5. حساب وعرض العداد التنازلي التلقائي للأيام المتبقية
+        function updateExamCountdown() {
+            // حساب الأيام ديناميكياً بناءً على نهاية خطة الـ 90 يوم
+            let initialDate = new Date(localStorage.getItem('countdownStartDate'));
+            if (!initialDate || isNaN(initialDate.getTime())) {
+                initialDate = new Date();
+                localStorage.setItem('countdownStartDate', initialDate.toISOString());
+            }
+            
+            const totalDays = 90;
+            const msPerDay = 24 * 60 * 60 * 1000;
+            const elapsedDays = Math.floor((new Date() - initialDate) / msPerDay);
+            let remainingDays = totalDays - elapsedDays;
+            
+            if (remainingDays < 0) remainingDays = 0;
+            
+            document.getElementById('countdownWidget').innerText = `${remainingDays} يوم`;
         }
 
         // ----- كود تحويل المود (Dark / Light) للموقع كله -----
