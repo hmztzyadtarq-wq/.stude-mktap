@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>معسكر الـ 10 أيام المشترك</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* إضافة ستايل خاص بجدول المعسكر التفاعلي */
+        .camp-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .camp-table th, .camp-table td {
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .camp-table th {
+            background-color: #020617;
+            color: var(--accent-pink);
+        }
+        /* ستايل دواير الإنجاز */
+        .checkbox-container {
+            display: inline-block;
+            position: relative;
+            cursor: pointer;
+            font-size: 22px;
+            user-select: none;
+        }
+        .circle-check {
+            height: 30px;
+            width: 30px;
+            background-color: #0f172a;
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            display: inline-block;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        /* الدائرة لما البشمهندس يخلص (بينك) */
+        .me-check.checked {
+            background-color: var(--accent-pink);
+            border-color: var(--accent-pink);
+            box-shadow: 0 0 10px var(--accent-pink);
+        }
+        /* الدائرة لما حازم يخلص (أخضر) */
+        .hazem-check.checked {
+            background-color: #10b981;
+            border-color: #10b981;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+        .task-row.all-done {
+            opacity: 0.6;
+            background-color: rgba(16, 185, 129, 0.05);
+        }
+        .task-row.all-done td:nth-child(2) {
+            text-decoration: line-through;
+        }
+        /* زرار تغيير المود */
+        .theme-toggle-btn {
+            background-color: var(--accent-pink);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* تنسيقات نظام إدارة وتنقّل المعسكرات الجديد */
+        .camps-tabs {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        .camp-tab {
+            background: var(--card-bg);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 10px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .camp-tab.active {
+            background: var(--luxury-gradient, var(--accent-pink));
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+        .management-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        
+        <nav>
+            <ul>
+                <li><a href="index.html">الرئيسية</a></li>
+                <li><a href="pomodoro.html">غرفة البومودورو</a></li>
+                <li><a href="schedule.html" class="active">جدول المعسكر</a></li>
+                <li><a href="summary.html">الملخصات المهمة</a></li>
+                <li><button onclick="toggleTheme()" class="theme-toggle-btn" id="themeBtn">المود الفاتح ☀️</button></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <main style="padding: 20px; max-width: 1200px; margin: 0 auto;">
+        
+        <!-- لوحة التحكم: تقسيم جزأين (إضافة معسكر جديد / إضافة مهمة للمعسكر الحالي) -->
+        <div class="management-grid">
+            <!-- كارت إنشاء كورس/معسكر جديد -->
+            <div class="card">
+                <h2>📁 إنشاء معسكر/كورس جديد</h2>
+                <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 12px;">تأسيس قسم مراجعة جديد بمحتوى منفصل:</p>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="newCampNameInput" placeholder="مثال: معسكر الحل النهائي، كورس العربي..." style="flex: 1;">
+                    <button onclick="createNewCamp()">إنشاء معسكر 🏗️</button>
+                </div>
+            </div>
+
+            <!-- كارت إضافة مهمة داخل المعسكر النشط -->
+            <div class="card">
+                <h2>🛠️ إضافة مهام للمعسكر الحالي</h2>
+                <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 12px;">إضافة درس أو مادة داخل المعسكر المحدد أدناه:</p>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <input type="text" id="dayInput" placeholder="مثال: اليوم الأول، الفترة أ..." style="flex: 1; min-width: 100px;">
+                    <input type="text" id="taskInput" placeholder="اكتب درس المذاكرة هنا..." style="flex: 2; min-width: 150px;">
+                    <button onclick="addCampTask()">إضافة المهمة 🚀</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- شريط تبديل وتصفح المعسكرات الحالية -->
+        <div class="card">
+            <h2 id="activeCampTitle">📅 تصفح المعسكرات النشطة</h2>
+            <div class="camps-tabs" id="campsTabsContainer">
+                <!-- الـ JS هيعرض أزرار المعسكرات هنا -->
+            </div>
+        </div>
+
+        <!-- جدول عرض التحدي -->
+        <div class="card" style="margin-top: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <h2 id="tableHeading">جدول التحدي المشترك</h2>
+                <button onclick="deleteCurrentCamp()" style="background-color: #ef4444; font-size: 13px; padding: 6px 12px;">حذف هذا المعسكر بالكامل 🗑️</button>
+            </div>
+            <table class="camp-table">
+                <thead>
+                    <tr>
+                        <th>اليوم / الفترة</th>
+                        <th>المهمة الدراسية</th>
+                        <th>البشمهندس 👨‍💻</th>
+                        <th>حازم رستم 👨‍💻</th>
+                        <th>التحكم</th>
+                    </tr>
+                </thead>
+                <tbody id="campTableBody">
+                    <!-- الـ JS هيعرض المهام هنا -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        // هيكل البيانات المطور: مصفوفة تحتوي على كائنات المعسكرات
+        // كل معسكر له اسم فريد ومصفوفة مهام خاصة به
+        let globalCamps = JSON.parse(localStorage.getItem('globalCamps')) || [
+            {
+                id: "default_10_days",
+                name: "معسكر العشرة الأوائل",
+                tasks: []
+            }
+        ];
+        
+        // المتغير المخزن لمعرفة أي معسكر معروض حالياً أمامكم
+        let activeCampId = localStorage.getItem('activeCampId') || "default_10_days";
+
+        window.onload = function() {
+            applySavedTheme();
+            // التأكد من أن المعسكر المحفوظ لا يزال موجوداً
+            if (!globalCamps.some(c => c.id === activeCampId)) {
+                activeCampId = globalCamps[0].id;
+            }
+            renderCampsTabs();
+            renderCampTasks();
+        };
+
+        // 1. دالة إنشاء معسكر جديد تماماً بالـ JS
+        function createNewCamp() {
+            const nameInput = document.getElementById('newCampNameInput');
+            const nameText = nameInput.value.trim();
+
+            if (nameText === '') {
+                alert('اكتب اسم المعسكر الجديد أولاً يا بشمهندس! 🎯');
+                return;
+            }
+
+            const newCamp = {
+                id: "camp_" + Date.now(),
+                name: nameText,
+                tasks: []
+            };
+
+            globalCamps.push(newCamp);
+            activeCampId = newCamp.id; // تحويل العرض تلقائياً للمعسكر الجديد
+            
+            saveAndRefreshAll();
+            nameInput.value = '';
+        }
+
+        // 2. دالة عرض أزرار التبويب للمعسكرات فوق الجدول
+        function renderCampsTabs() {
+            const container = document.getElementById('campsTabsContainer');
+            container.innerHTML = '';
+
+            globalCamps.forEach(camp => {
+                const btn = document.createElement('button');
+                btn.className = `camp-tab ${camp.id === activeCampId ? 'active' : ''}`;
+                btn.innerText = camp.name;
+                btn.onclick = function() {
+                    activeCampId = camp.id;
+                    localStorage.setItem('activeCampId', activeCampId);
+                    renderCampsTabs();
+                    renderCampTasks();
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        // 3. دالة إضافة مهمة للمعسكر النشط حالياً فقط
+        function addCampTask() {
+            const dayText = document.getElementById('dayInput').value.trim();
+            const taskText = document.getElementById('taskInput').value.trim();
+
+            if (dayText === '' || taskText === '') {
+                alert('اكتب الفترة والمهمة لكي نضيفها للجدول! 😂');
+                return;
+            }
+
+            const newTask = {
+                id: Date.now(),
+                day: dayText,
+                task: taskText,
+                meDone: false,
+                hazemDone: false
+            };
+
+            // البحث عن المعسكر النشط حالياً وإضافة المهمة داخل مصفوفته الخاصة
+            const currentCamp = globalCamps.find(c => c.id === activeCampId);
+            if (currentCamp) {
+                currentCamp.tasks.push(newTask);
+                saveAndRefreshAll();
+                document.getElementById('taskInput').value = '';
+            }
+        }
+
+        // 4. دالة عرض مهام المعسكر المحدد حالياً في الجدول
+        function renderCampTasks() {
+            const tbody = document.getElementById('campTableBody');
+            tbody.innerHTML = '';
+            
+            const currentCamp = globalCamps.find(c => c.id === activeCampId);
+            if (!currentCamp) return;
+
+            // تحديث عناوين الواجهة باسم المعسكر الحالي
+            document.getElementById('tableHeading').innerText = `جدول تحدي: ${currentCamp.name}`;
+
+            if(currentCamp.tasks.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="color: var(--text-muted); font-style: italic;">لا يوجد مهام مضافة في هذا المعسكر حتى الآن. أضف أول مهمة بالرشد بالمنطقة بالأعلى! 🚀</td></tr>`;
+                return;
+            }
+
+            currentCamp.tasks.forEach(t => {
+                const isAllDone = t.meDone && t.hazemDone;
+                const row = document.createElement('tr');
+                row.className = `task-row ${isAllDone ? 'all-done' : ''}`;
+
+                row.innerHTML = `
+                    <td style="font-weight: bold; color: var(--accent-pink);">${t.day}</td>
+                    <td>${t.task}</td>
+                    <td>
+                        <span class="circle-check me-check ${t.meDone ? 'checked' : ''}" onclick="toggleMe(${t.id})"></span>
+                    </td>
+                    <td>
+                        <span class="circle-check hazem-check ${t.hazemDone ? 'checked' : ''}" onclick="toggleHazem(${t.id})"></span>
+                    </td>
+                    <td>
+                        <button onclick="deleteCampTask(${t.id})" style="background-color: #ef4444; padding: 5px 10px; font-size: 12px; border:none; border-radius:6px; color:white; cursor:pointer;">حذف</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // 5. تعديل حالة إنجاز البشمهندس للمهمة
+        function toggleMe(taskId) {
+            const currentCamp = globalCamps.find(c => c.id === activeCampId);
+            if (currentCamp) {
+                const task = currentCamp.tasks.find(t => t.id === taskId);
+                if (task) task.meDone = !task.meDone;
+                saveAndRefreshAll();
+            }
+        }
+
+        // 6. تعديل حالة إنجاز حازم للمهمة
+        function toggleHazem(taskId) {
+            const currentCamp = globalCamps.find(c => c.id === activeCampId);
+            if (currentCamp) {
+                const task = currentCamp.tasks.find(t => t.id === taskId);
+                if (task) task.hazemDone = !task.hazemDone;
+                saveAndRefreshAll();
+            }
+        }
+
+        // 7. حذف مهمة من المعسكر الحالي
+        function deleteCampTask(taskId) {
+            const currentCamp = globalCamps.find(c => c.id === activeCampId);
+            if (currentCamp) {
+                currentCamp.tasks = currentCamp.tasks.filter(t => t.id !== taskId);
+                saveAndRefreshAll();
+            }
+        }
+
+        // 8. حذف معسكر بالكامل بكل ما فيه
+        function deleteCurrentCamp() {
+            if (globalCamps.length <= 1) {
+                alert('لا يمكنك حذف المعسكر الأخير، يجب أن يتبقى معسكر واحد على الأقل في لوحة التحكم!');
+                return;
+            }
+            if (confirm('هل أنت متأكد من حذف هذا المعسكر وجميع المهام المسجلة داخله نهائياً؟')) {
+                globalCamps = globalCamps.filter(c => c.id !== activeCampId);
+                activeCampId = globalCamps[0].id;
+                localStorage.setItem('activeCampId', activeCampId);
+                saveAndRefreshAll();
+            }
+        }
+
+        // دالة المساعدة المركزية للحفظ وإعادة العرض المباشر بالـ JS
+        function saveAndRefreshAll() {
+            localStorage.setItem('globalCamps', JSON.stringify(globalCamps));
+            renderCampsTabs();
+            renderCampTasks();
+        }
+
+        // ----- كود تحويل المود (Dark / Light) للموقع كله -----
+        function toggleTheme() {
+            if (document.documentElement.getAttribute('data-theme') === 'light') {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'dark');
+                document.getElementById('themeBtn').innerText = "المود الفاتح ☀️";
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+                document.getElementById('themeBtn').innerText = "المود الغامق 🌙";
+            }
+        }
+
+        function applySavedTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+                document.getElementById('themeBtn').innerText = "المود الغامق 🌙";
+            }
+        }
+    </script>
+</body>
+</html>

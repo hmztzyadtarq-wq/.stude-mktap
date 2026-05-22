@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصات المدرسين - معسكر المذاكرة</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .grid-platforms {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .platform-card {
+            text-align: center;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        .platform-card:hover {
+            border-color: var(--accent-pink);
+        }
+        .subject-tag {
+            color: var(--accent-pink);
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .platform-btn {
+            display: inline-block;
+            margin-top: 15px;
+            width: 100%;
+            text-decoration: none;
+            text-align: center;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="appSection">
+        <header>
+            <h1>منصات ومواقع المدرسين المعتمدة 🎓</h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html">الرئيسية</a></li>
+                    <li><a href="pomodoro.html">غرفة البومودورو</a></li>
+                    <li><a href="schedule.html">جدول المعسكر</a></li>
+                    <li><a href="summary.html">الملخصات المهمة</a></li>
+                    <li><a href="platforms.html" class="active">منصات المدرسين 🎓</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main style="padding: 20px; max-width: 1200px; margin: 0 auto;">
+            <div class="card">
+                <h2>وصول سريع للمحاضرات والامتحانات الإلكترونية 🕒</h2>
+                <p style="color: var(--text-muted);">كل المنصات التي نحتاجها في فترات المراجعة والحل مجمعة هنا لعدم تشتيت التركيز.</p>
+            </div>
+
+            <div class="grid-platforms">
+                <!-- منصة 1 -->
+                <div class="card platform-card">
+                    <span class="subject-tag">الفيزياء</span>
+                    <h3 style="margin: 10px 0;">منصة الأستاذ للفيزياء</h3>
+                    <p style="color: var(--text-muted); font-size: 14px;">للمحاضرات والحل والمتابعة الدورية.</p>
+                    <a href="https://example.com" target="_blank" class="platform-btn"><button style="width:100%">دخول المنصة 🌐</button></a>
+                </div>
+
+                <!-- منصة 2 -->
+                <div class="card platform-card">
+                    <span class="subject-tag">الكيمياء</span>
+                    <h3 style="margin: 10px 0;">منصة الكيمياء التعليمية</h3>
+                    <p style="color: var(--text-muted); font-size: 14px;">مراجعات الفصول والامتحانات الشاملة.</p>
+                    <a href="https://example.com" target="_blank" class="platform-btn"><button style="width:100%">دخول المنصة 🌐</button></a>
+                </div>
+
+                <!-- منصة 3 -->
+                <div class="card platform-card">
+                    <span class="subject-tag">اللغة العربية</span>
+                    <h3 style="margin: 10px 0;">منصة بسطهالك</h3>
+                    <p style="color: var(--text-muted); font-size: 14px;">حصص النحو، البلاغة، والنصوص المتحررة.</p>
+                    <a href="https://example.com" target="_blank" class="platform-btn"><button style="width:100%">دخول المنصة 🌐</button></a>
+                </div>
+
+                <!-- منصة 4 -->
+                <div class="card platform-card">
+                    <span class="subject-tag">اللغات والجيولوجيا</span>
+                    <h3 style="margin: 10px 0;">منصة المراجعات والامتحانات</h3>
+                    <p style="color: var(--text-muted); font-size: 14px;">باقي المواد والمنصات الخارجية المشتركة.</p>
+                    <a href="https://example.com" target="_blank" class="platform-btn"><button style="width:100%">دخول المنصة 🌐</button></a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- تأمين بسيط لصفحة المنصات أيضاً لضمان الخصوصية -->
+    <script>
+        if (localStorage.getItem('siteAuth') !== 'true') {
+            alert('عذراً، هذه الصفحة مشفرة. يرجى تسجيل الدخول من الصفحة الرئيسية أولاً! 🔒');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
