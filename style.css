@@ -424,3 +424,131 @@ button {
 button:hover {
     opacity: 0.9;
 }
+/* ==========================================
+   🎨 نظام الألوان الافتراضي (الداكن - Dark Mode)
+   ========================================== */
+:root {
+    --bg-main: #0f172a;          /* خلفية الموقع الغامقة */
+    --card-bg: #1e293b;          /* خلفية الكروت */
+    --text-main: #f8fafc;        /* لون النصوص الأساسية */
+    --text-muted: #94a3b8;       /* لون النصوص الفرعية */
+    --border-color: #334155;     /* لون الحدود والفواصل */
+    
+    --accent-pink: #ec4899;      /* اللون البينك المميز للمنصة */
+    --accent-glow: rgba(236, 72, 153, 0.3);
+    --luxury-gradient: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+}
+
+/* ==========================================
+   ☀️ نظام الألوان البديل (الفاتح/البينك - Light/Pink Mode)
+   ========================================== */
+[data-theme="light"] {
+    --bg-main: #fdf2f8;          /* خلفية فاتحة ومريحة مائلة للبينك الهادي */
+    --card-bg: #ffffff;          /* كروت بيضاء ناصعة */
+    --text-main: #0f172a;        /* نصوص داكنة لسهولة القراءة */
+    --text-muted: #64748b;       /* نصوص فرعية رمادية */
+    --border-color: #fbcfe8;     /* حدود ناعمة بلون بينك فاتح */
+    
+    --accent-pink: #db2777;      /* درجة بينك أغمق قليلاً لتناسب الخلفية الفاتحة */
+    --accent-glow: rgba(219, 39, 119, 0.15);
+    --luxury-gradient: linear-gradient(135deg, #db2777 0%, #7c3aed 100%);
+}
+
+/* ==========================================
+   🛠️ التنسيقات العامة للموقع (تعتمد كلياً على المتغيرات)
+   ========================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    line-height: 1.6;
+}
+
+header {
+    background: #020617; /* يظل داكن وفخم ليبرز الهوية */
+    color: white;
+    padding: 20px;
+    border-bottom: 2px solid var(--accent-pink);
+}
+
+header h1 {
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: 24px;
+}
+
+nav ul {
+    display: flex;
+    justify-content: center;
+    list-style: none;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+nav ul li a {
+    color: #94a3b8;
+    text-decoration: none;
+    font-weight: bold;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+nav ul li a:hover, nav ul li a.active {
+    color: white;
+    background-color: var(--accent-pink);
+}
+
+/* الكروت التفاعلية */
+.card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.card h2 {
+    color: var(--text-main);
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+/* عناصر الإدخال والأزرار داخل الموقع */
+input[type="text"], input[type="number"], select {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 16px;
+    outline: none;
+}
+
+input[type="text"]:focus {
+    border-color: var(--accent-pink);
+}
+
+button {
+    background: var(--luxury-gradient);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: opacity 0.2s;
+}
+
+button:hover {
+    opacity: 0.9;
+}
