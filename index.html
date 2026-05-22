@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -144,7 +143,7 @@
         /* ستايل قسم التوقيت والعدادات الإضافية المرجعة */
         .dashboard-widgets {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 15px;
             margin-bottom: 20px;
         }
@@ -154,6 +153,9 @@
             padding: 15px;
             border-radius: 12px;
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
         .widget-val {
             font-size: 24px;
@@ -180,14 +182,19 @@
     
     <main style="padding: 20px; max-width: 1200px; margin: 0 auto;">
         
-        <!-- قسم العدادات المرجعة: الساعة والعد التنازلي للامتحانات -->
+        <!-- قسم العدادات: الساعة، عداد كورس العشرة الأوائل، والعد التنازلي العام -->
         <div class="dashboard-widgets">
             <div class="widget-box">
                 <div style="font-size: 14px; color: var(--text-muted);">⏰ الساعة الآن</div>
                 <div class="widget-val" id="digitalClock">00:00:00 م</div>
             </div>
+            <div class="widget-box" style="border-color: var(--accent-pink);">
+                <div style="font-size: 14px; color: var(--text-main); font-weight: bold;">🏆 معسكر العشرة الأوائل</div>
+                <div class="widget-val" id="campDaysWidget" style="color: var(--accent-pink);">اليوم 2 من 10</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;" id="campRemainingText">متبقي 8 أيام</div>
+            </div>
             <div class="widget-box">
-                <div style="font-size: 14px; color: var(--text-muted);">⏳ العد التنازلي المتبقي</div>
+                <div style="font-size: 14px; color: var(--text-muted);">⏳ المتبقي على نهاية الخطة العامة</div>
                 <div class="widget-val" id="countdownWidget">جاري الحساب...</div>
             </div>
         </div>
@@ -272,6 +279,7 @@
             setupGoogleMeetLink();
             startLiveClock();
             updateExamCountdown();
+            setupCampTenDaysTracker();
         };
 
         // 1. دالة بناء كروت المعسكرات ديناميكياً والربط الذكي للتنقل للجدول
@@ -364,19 +372,18 @@
                 const now = new Date();
                 let hours = now.getHours();
                 const minutes = String(now.getMinutes()).padStart(2, '0');
-                const seconds = String(now.getSeconds()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).getSeconds ? String(now.getSeconds()).padStart(2, '0') : String(now.getSeconds()).padStart(2, '0');
                 const ampm = hours >= 12 ? 'م' : 'ص';
                 
                 hours = hours % 12;
-                hours = hours ? hours : 12; // الساعة 0 تصبح 12
+                hours = hours ? hours : 12;
                 
                 document.getElementById('digitalClock').innerText = `${hours}:${minutes}:${seconds} ${ampm}`;
             }, 1000);
         }
 
-        // 5. حساب وعرض العداد التنازلي التلقائي للأيام المتبقية
+        // 5. حساب وعرض العداد التنازلي التلقائي للأيام المتبقية في الخطة العامة (90 يوم)
         function updateExamCountdown() {
-            // حساب الأيام ديناميكياً بناءً على نهاية خطة الـ 90 يوم
             let initialDate = new Date(localStorage.getItem('countdownStartDate'));
             if (!initialDate || isNaN(initialDate.getTime())) {
                 initialDate = new Date();
@@ -391,6 +398,36 @@
             if (remainingDays < 0) remainingDays = 0;
             
             document.getElementById('countdownWidget').innerText = `${remainingDays} يوم`;
+        }
+
+        // 6. تتبع وضبط أيام "معسكر العشرة الأوائل" (10 أيام - واليوم الحالي هو الثاني)
+        function setupCampTenDaysTracker() {
+            // تثبيت تاريخ بداية افتراضي للمعسكر في الذاكرة لكي يستمر في العد بشكل صحيح
+            let campStartDate = localStorage.getItem('campTenDaysStartDate');
+            
+            if (!campStartDate) {
+                // إذا لم يكن مسجلاً، نعتبر أن المعسكر بدأ بالأمس (لأن اليوم هو اليوم الثاني)
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                localStorage.setItem('campTenDaysStartDate', yesterday.toISOString());
+                campStartDate = yesterday.toISOString();
+            }
+
+            const start = new Date(campStartDate);
+            const now = new Date();
+            const msPerDay = 24 * 60 * 60 * 1000;
+            
+            // حساب اليوم الحالي في المعسكر
+            let currentDay = Math.floor((now - start) / msPerDay) + 1;
+            
+            // حماية للتأكد من بقاء النطاق بين 1 و 10 أيام، ويمكنك إعادة تعيينه برمجياً إن أردت
+            if (currentDay < 1) currentDay = 2; // تثبيت مبدئي بناءً على طلبك اليوم
+            if (currentDay > 10) currentDay = 10;
+
+            const remainingCampDays = 10 - currentDay;
+
+            document.getElementById('campDaysWidget').innerText = `اليوم ${currentDay} من 10`;
+            document.getElementById('campRemainingText').innerText = remainingCampDays > 0 ? `متبقي ${remainingCampDays} أيام` : `اكتمل المعسكر بنجاح! 🏆`;
         }
 
         // ----- كود تحويل المود (Dark / Light) للموقع كله -----
