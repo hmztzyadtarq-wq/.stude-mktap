@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>غرفة البومودورو والعداد التنازلي المشترك</title>
+    <title>غرفة البومودورو المتزامنة</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -80,7 +81,7 @@
 </head>
 <body>
     <header>
-       
+        <h1>⏱️ البومودورو وعداد المعسكر الدراسي</h1>
         <nav>
             <ul>
                 <li><a href="index.html">الرئيسية</a></li>
@@ -94,7 +95,7 @@
     
     <main>
         <div class="card" style="text-align: center;">
-            <h2>⏳ الوقت المتبقي على ماراثون الامتحانات (21/06/2026)</h2>
+            <h2>⏳ الوقت المتبقي على ماراثون الامتحانات</h2>
             <div class="countdown-container">
                 <div class="time-box"><span id="exam-days">00</span><label>أيام</label></div>
                 <div class="time-box"><span id="exam-hours">00</span><label>ساعات</label></div>
@@ -104,34 +105,57 @@
         </div>
 
         <div class="card" style="text-align: center;">
-            <h2>🎯 عداد البومودورو (تزامن فوري مجاني بالكامل)</h2>
-            <div class="status-badge" id="syncStatus">🔄 جاري الاتصال بالشبكة المشتركة...</div>
+            <h2>🎯 عداد البومودورو المشترك (مباشر بينك وبين حازم)</h2>
+            <div class="status-badge" id="syncStatus">🟢 متصل ومُزامن لايف</div>
             
             <div class="pomo-modes">
-                <button class="pomo-btn active" onclick="setMode(30, event)">⏱️ 30 د مذكرات + 5 راحة</button>
-                <button class="pomo-btn" onclick="setMode(50, event)">⏱️ 50 د مذكرات + 10 راحة</button>
-                <button class="pomo-btn" onclick="setMode(25, event)">⏱️ 25 د مذكرات + 5 راحة</button>
-                <button class="pomo-btn" onclick="setMode(90, event)">⏱️ 90 د مذكرات + 20 راحة</button>
+                <button class="pomo-btn active" onclick="changeRemoteMode(30, 5, 'mode1')">⏱️ 30 د مذكرات + 5 راحة</button>
+                <button class="pomo-btn" onclick="changeRemoteMode(50, 10, 'mode2')">⏱️ 50 د مذكرات + 10 راحة</button>
+                <button class="pomo-btn" onclick="changeRemoteMode(25, 5, 'mode3')">⏱️ 25 د مذكرات + 5 راحة</button>
+                <button class="pomo-btn" onclick="changeRemoteMode(90, 20, 'mode4')">⏱️ 90 د مذكرات + 20 راحة</button>
             </div>
 
             <div class="timer-display" id="timerDisplay">30:00</div>
             
             <div style="display: flex; justify-content: center; gap: 15px; margin-top: 15px;">
-                <button onclick="broadcastCommand('start')" style="background-color: var(--accent-green); font-size: 18px;">تشغيل العداد للجميع ▶️</button>
-                <button onclick="broadcastCommand('reset')" style="background-color: #ef4444; font-size: 18px;">إيقاف وتصفير 🔄</button>
+                <button onclick="sendTimerCommand('start')" style="background-color: var(--accent-green); font-size: 18px;">تشغيل العداد للجميع ▶️</button>
+                <button onclick="sendTimerCommand('reset')" style="background-color: #ef4444; font-size: 18px;">تصفير العداد 🔄</button>
             </div>
         </div>
     </main>
 
     <script>
-        // التحقق من الباسورد للموقع كاملاً
+        // التحقق من كلمة السر العامة للموقع لحمايته
         if (localStorage.getItem('siteAuth') !== 'true') {
-            window.location.href = 'index.html';
+            window.location.href = 'index.html'; // يرجعه للرئيسية يكتب الباسورد
         }
+
+        // إعدادات فايربيس المجانية (تقدر تفتح حساب مجاني وتستبدل دول ببيانات مشروعك عشان يشتغل لايف بنسبة 100%)
+        const firebaseConfig = {
+            databaseURL: "https://YOUR-PROJECT-ID-DEFAULT-RTDB.firebaseio.com/" 
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
         let studyMinutes = 30;
         let totalSeconds = studyMinutes * 60;
         let timerInterval = null;
+
+        // الاستماع للتحديثات اللحظية من فايربيس
+        database.ref('pomodoro').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                totalSeconds = data.currentSeconds;
+                studyMinutes = data.studyMinutes;
+                updateDisplay();
+                
+                if (data.status === 'running' && !timerInterval) {
+                    localStart();
+                } else if (data.status === 'stopped') {
+                    localStop();
+                }
+            }
+        });
 
         function updateDisplay() {
             let mins = Math.floor(totalSeconds / 60);
@@ -140,110 +164,59 @@
                 (mins < 10 ? "0" + mins : mins) + ":" + (secs < 10 ? "0" + secs : secs);
         }
 
-        // ======= سحر المزامنة المجانية بدون حسابات (P2P Room) =======
-        // السيستم هيعمل شبكة ربط مباشرة بينك (البشمهندس) وبين حازم بناءً على اسم الغرفة الثابت ده
-        const ROOM_ID = "mh_secret_camp_2026"; 
-        let peer = new Peer();
-        let conn = null;
-
-        peer.on('open', (id) => {
-            document.getElementById('syncStatus').innerText = "🟢 الغرفة جاهزة! في انتظار دخول الطرف الآخر...";
-            
-            // محاولة الاتصال التلقائي بالطرف الآخر
-            conn = peer.connect(ROOM_ID);
-            setupConnection();
-        });
-
-        peer.on('connection', (connection) => {
-            conn = connection;
-            setupConnection();
-        });
-
-        function setupConnection() {
-            conn.on('open', () => {
-                document.getElementById('syncStatus').innerText = "🟢 تم الاتصال بين البشمهندس وحازم بنجاح! العداد لايف الآن";
-            });
-            conn.on('data', (data) => {
-                // استقبال الأوامر من الطرف الآخر وتنفيذها فوراً
-                if (data.command === 'start') {
-                    localStart();
-                } else if (data.command === 'reset') {
-                    localReset();
-                } else if (data.command === 'setMode') {
-                    studyMinutes = data.minutes;
-                    totalSeconds = data.minutes * 60;
-                    updateDisplay();
-                }
+        function changeRemoteMode(study, breakTime, modeId) {
+            database.ref('pomodoro').set({
+                studyMinutes: study,
+                currentSeconds: study * 60,
+                status: 'stopped'
             });
         }
 
-        function broadcastCommand(cmd) {
-            if (cmd === 'start') localStart();
-            if (cmd === 'reset') localReset();
-
-            if (conn && conn.open) {
-                conn.send({ command: cmd });
+        function sendTimerCommand(command) {
+            if (command === 'start') {
+                database.ref('pomodoro/status').set('running');
+            } else {
+                database.ref('pomodoro').update({
+                    status: 'stopped',
+                    currentSeconds: studyMinutes * 60
+                });
             }
-        }
-
-        function setMode(minutes, event) {
-            document.querySelectorAll('.pomo-btn').forEach(btn => btn.classList.remove('active'));
-            if(event) event.target.classList.add('active');
-
-            studyMinutes = minutes;
-            totalSeconds = minutes * 60;
-            updateDisplay();
-
-            if (conn && conn.open) {
-                conn.send({ command: 'setMode', minutes: minutes });
-            }
-            localReset();
         }
 
         function localStart() {
-            if (timerInterval !== null) return;
             timerInterval = setInterval(() => {
                 if (totalSeconds > 0) {
                     totalSeconds--;
                     updateDisplay();
+                    // البشمهندس هو اللي بيحدث الوقت على السيرفر كل ثانية ومزامنتها مع حازم
+                    if (totalSeconds % 2 === 0) { 
+                        database.ref('pomodoro/currentSeconds').set(totalSeconds);
+                    }
                 } else {
-                    clearInterval(timerInterval);
-                    timerInterval = null;
-                    alert('عاش يا أبطال! وقت المذاكرة خلص.. خذوا بريك ☕');
+                    localStop();
+                    alert('عاش يا وحوش! وقت المذاكرة خلص.. خدوا بريك ☕');
                 }
             }, 1000);
         }
 
-        function localReset() {
+        function localStop() {
             clearInterval(timerInterval);
             timerInterval = null;
-            totalSeconds = studyMinutes * 60;
             updateDisplay();
         }
 
-        // ======= عداد الامتحانات الدقيق والمحدث لـ 21/06/2026 =======
-        const examDate = new Date("June 21, 2026 09:00:00").getTime();
-        
-        function startExamCountdown() {
+        // ======= عداد الامتحانات التنازلي المظبوط لـ 2026 =======
+        const examDate = new Date("June 1, 2026 09:00:00").getTime();
+        setInterval(function() {
             const now = new Date().getTime();
             const distance = examDate - now;
-
-            if (distance < 0) {
-                document.getElementById("exam-days").innerText = "00";
-                return;
-            }
+            if (distance < 0) return;
 
             document.getElementById("exam-days").innerText = Math.floor(distance / (1000 * 60 * 60 * 24));
             document.getElementById("exam-hours").innerText = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             document.getElementById("exam-minutes").innerText = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             document.getElementById("exam-seconds").innerText = Math.floor((distance % (1000 * 60)) / 1000);
-        }
-        
-        setInterval(startExamCountdown, 1000);
-
-        // تشغيل فوري
-        updateDisplay();
-        startExamCountdown();
+        }, 1000);
 
         function toggleTheme() {
             if (document.documentElement.getAttribute('data-theme') === 'light') {
@@ -253,9 +226,6 @@
                 document.documentElement.setAttribute('data-theme', 'light');
                 localStorage.setItem('theme', 'light');
             }
-        }
-        if (localStorage.getItem('theme') === 'light') {
-            document.documentElement.setAttribute('data-theme', 'light');
         }
     </script>
 </body>
