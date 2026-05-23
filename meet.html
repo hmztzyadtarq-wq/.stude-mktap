@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>غرفة المذاكرة والعداد الحي</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .pomo-card { background: radial-gradient(circle at top left, #1e293b, #0f172a); border-radius: 24px; text-align: center; padding: 40px; margin-top: 20px; }
+        .timer-big { font-size: 6rem; font-weight: 800; font-family: monospace; color: var(--text-main); margin: 20px 0; text-shadow: 0 0 20px rgba(99, 102, 241, 0.3); }
+        .btn-meet { background: linear-gradient(135deg, #10b981, #059669); font-size: 1.1rem; padding: 15px 35px; box-shadow: 0 4px 15px rgba(16,185,129,0.3); text-decoration: none; display: inline-block; color: white; border-radius: 12px; font-weight: bold; margin-bottom: 25px; }
+        .options-group button { background: #334155; font-size: 0.9rem; padding: 8px 16px; margin: 0 5px; color: var(--text-muted); }
+        .options-group button.active { background: var(--accent); color: #000; }
+        .control-btns button { font-size: 1.1rem; padding: 12px 30px; margin: 10px; }
+        .state-badge { display: inline-block; padding: 6px 16px; border-radius: 50px; font-weight: bold; font-size: 0.9rem; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="brand">🎥 غرفة المذاكرة والمؤقت اللحظي المشترك</div>
+        <div class="links">
+            <a href="index.html">🏠 الجدول والمنافسة</a>
+            <a href="meet.html" class="active">🎥 العداد المشترك والميت</a>
+            <a href="login.html" style="color: var(--danger);">🚪 خروج</a>
+        </div>
+    </nav>
+
+    <div style="max-width: 700px; margin: 0 auto;">
+        <a href="https://meet.google.com/abc-defg-hij" target="_blank" class="btn-meet">🎥 انضم لجوجل ميت الحقيقي مع حازم الآن</a>
+
+        <div class="card pomo-card">
+            <h2>⏱️ مؤقت البومودورو المتزامن</h2>
+            <p class="subtitle" style="margin-bottom: 10px;">لو حازم شغل العداد هيشتغل عندك.. ولو وقفه هيقف عندك لايف! ⚡</p>
+            
+            <div id="statusBadge" class="state-badge" style="background: #334155; color: white;">جاهز للبدء</div>
+
+            <div class="timer-big" id="timerDisplay">50:00</div>
+
+            <div class="options-group" style="margin-bottom: 25px;">
+                <button id="opt50" class="active" onclick="changeMode(50, 10, 'opt50')">⚡ جلسة دحيحة (50 د مذاكرة / 10 د راحة)</button>
+                <button id="opt25" onclick="changeMode(25, 5, 'opt25')">☕ جلسة سريعة (25 د مذاكرة / 5 د راحة)</button>
+            </div>
+
+            <div class="control-btns">
+                <button style="background:var(--success);" onclick="triggerTimer('start')">ابدأ العداد سوا 🚀</button>
+                <button style="background:var(--danger);" onclick="triggerTimer('pause')">إيقاف مؤقت ⏸️</button>
+                <button style="background:var(--border); color:white;" onclick="triggerTimer('reset')">إعادة ضبط 🔄</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- كود صوت جرس رنين التنبيه المدمج أونلاين مجاناً -->
+    <audio id="alarmSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-200.wav" preload="auto"></audio>
+
+    <script>
+        const BIN_URL = "https://api.jsonbin.io/v3/b/664ec5b3e41b4d34e4fa4411";
+        const API_KEY = "$2b$10$W7bO4S.Vptn6hJUnm/VTeOWeWb2P.qF1fL4UWhpOfb5D8IlyD36wW";
+        let localData = {};
+        let isSender = false;
+
+        function syncTimer() {
+            if (isSender) return; // لو أنا اللي ضغطت متقاطعش مع السيرفر
+
+            fetch(BIN_URL, { headers: { "X-Master-Key": API_KEY }, cache: "no-store" })
+            .then(res => res.json()).then(resData => {
+                localData = resData.record;
+                if (!localData.timer) {
+                    localData.timer = { state: 'reset', timeLeft: 3000, studyTime: 50, breakTime: 10, type: 'study', lastUpdated: Date.now() };
+                }
+                
+                const t = localData.timer;
+                // حساب الوقت الفعلي المنقضي بدقة لو حازم مشغل السيرفر
+                if (t.state === 'running') {
+                    let elapsed = Math.floor((Date.now() - t.lastUpdated) / 1000);
+                    let actualTimeLeft = t.timeLeft - elapsed;
+                    if (actualTimeLeft <= 0) {
+                        actualTimeLeft = 0;
+                        if(t.timeLeft > 0) playAlarm(); // تشغيل الرنة
+                    }
+                    updateDisplay(actualTimeLeft, t.type);
+                } else {
+                    updateDisplay(t.timeLeft, t.type);
+                }
+                
+                // تحديث شكل الخيارات النشطة
+                if(t.studyTime === 25) {
+                    document.getElementById('opt25').classList.add('active');
+                    document.getElementById('opt50').classList.remove('active');
+                } else {
+                    document.getElementById('opt50').classList.add('active');
+                    document.getElementById('opt25').classList.remove('active');
+                }
+            });
+        }
+
+        function updateDisplay(seconds, type) {
+            let mins = Math.floor(seconds / 60);
+            let secs = seconds % 60;
+            document.getElementById('timerDisplay').innerText = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+            
+            const badge = document.getElementById('statusBadge');
+            if (type === 'study') {
+                badge.innerText = "✍️ وقت التركيز والمذاكرة";
+                badge.style.background = "rgba(239, 68, 68, 0.2)";
+                badge.style.color = "var(--danger)";
+            } else {
+                badge.innerText = "☕ وقت الراحة والبريك";
+                badge.style.background = "rgba(16, 185, 129, 0.2)";
+                badge.style.color = "var(--success)";
+            }
+        }
+
+        function triggerTimer(action) {
+            isSender = true;
+            fetch(BIN_URL, { headers: { "X-Master-Key": API_KEY } })
+            .then(res => res.json()).then(resData => {
+                let t = resData.record.timer || { studyTime: 50, breakTime: 10, type: 'study', timeLeft: 3000 };
+                
+                if (action === 'start') {
+                    t.state = 'running';
+                } else if (action === 'pause') {
+                    if (t.state === 'running') {
+                        let elapsed = Math.floor((Date.now() - t.lastUpdated) / 1000);
+                        t.timeLeft = Math.max(0, t.timeLeft - elapsed);
+                    }
+                    t.state = 'paused';
+                } else if (action === 'reset') {
+                    t.state = 'reset';
+                    t.type = 'study';
+                    t.timeLeft = t.studyTime * 60;
+                }
+                
+                t.lastUpdated = Date.now();
+                resData.record.timer = t;
+                
+                return fetch(BIN_URL, {
+                    method: 'PUT', headers: { "Content-Type": "application/json", "X-Master-Key": API_KEY },
+                    body: JSON.stringify(resData.record)
+                });
+            }).then(() => {
+                isSender = false;
+                syncTimer();
+            });
+        }
+
+        function changeMode(study, breakM, btnId) {
+            isSender = true;
+            fetch(BIN_URL, { headers: { "X-Master-Key": API_KEY } })
+            .then(res => res.json()).then(resData => {
+                resData.record.timer = {
+                    state: 'reset',
+                    studyTime: study,
+                    breakTime: breakM,
+                    timeLeft: study * 60,
+                    type: 'study',
+                    lastUpdated: Date.now()
+                };
+                return fetch(BIN_URL, {
+                    method: 'PUT', headers: { "Content-Type": "application/json", "X-Master-Key": API_KEY },
+                    body: JSON.stringify(resData.record)
+                });
+            }).then(() => {
+                isSender = false;
+                syncTimer();
+            });
+        }
+
+        function playAlarm() {
+            document.getElementById('alarmSound').play();
+        }
+
+        // فحص ومزامنة حيّة سريعة جداً كل ثانيتين للتأكد من الرنين والمزامنة اللحظية
+        setInterval(syncTimer, 2000);
+        window.onload = syncTimer;
+    </script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول - لوحة المراجعة</title>
+    <style>
+        /* 🎨 تصميم فخم متناسق مع لوحة التحكم الزجاجية */
+        body {
+            background: radial-gradient(circle at top right, #0f172a, #1e1b4b);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .login-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.8));
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 40px 30px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #f59e0b;
+            margin-bottom: 8px;
+            font-size: 1.6rem;
+        }
+
+        p {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: right;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #cbd5e1;
+            padding-right: 4px;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.2);
+        }
+
+        button {
+            width: 100%;
+            background: linear-gradient(135deg, #4f46e5, #6366f1);
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .error-msg {
+            color: #ef4444;
+            font-size: 0.85rem;
+            margin-top: 15px;
+            display: none;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <h2>🔒 بوابة تسجيل الدخول</h2>
+        <p>ادخل بياناتك لمتابعة التحدي والمنافسة</p>
+        
+        <div class="input-group">
+            <label>رقم الهاتف</label>
+            <input type="tel" id="phone" placeholder="01xxxxxxxxx" autocomplete="off">
+        </div>
+        
+        <div class="input-group">
+            <label>كلمة المرور</label>
+            <input type="password" id="password" placeholder="••••••••" autocomplete="off">
+        </div>
+        
+        <button onclick="login()">دخول المنصة 🚀</button>
+        <div id="error" class="error-msg">❌ رقم الهاتف أو كلمة المرور غير صحيحة!</div>
+    </div>
+
+    <script>
+        function login() {
+            const phoneInput = document.getElementById('phone').value.trim();
+            const passInput = document.getElementById('password').value.trim();
+            const errorDiv = document.getElementById('error');
+
+            // ⚙️ البيانات الجديدة المقارنة بدقة عالية
+            const userTareq = { phone: "01140090339", pass: "1714827128", name: "طارق 🛠️" };
+            const userHazem = { phone: "01098078492", pass: "eesdca32", name: "حازم 🩺" };
+
+            if (phoneInput === userTareq.phone && passInput === userTareq.pass) {
+                // حفظ اسم طارق وتوجيهه للوحة
+                localStorage.setItem('currentUser', userTareq.name);
+                window.location.href = "index.html";
+            } 
+            else if (phoneInput === userHazem.phone && passInput === userHazem.pass) {
+                // حفظ اسم حازم وتوجيهه للوحة
+                localStorage.setItem('currentUser', userHazem.name);
+                window.location.href = "index.html";
+            } 
+            else {
+                // إظهار رسالة الخطأ لو البيانات غلط
+                errorDiv.style.display = "block";
+            }
+        }
+    </script>
+</body>
+</html>
